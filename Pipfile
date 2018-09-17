@@ -8,6 +8,8 @@ name = "pypi"
 [packages]
 
 botany-client = "*"
+ipython = "*"
+botany-connectfour = "*"
 
 
 [dev-packages]
@@ -16,4 +18,4 @@ botany-client = "*"
 
 [requires]
 
-python_version = "3.6"
+python_version = "3.7"
