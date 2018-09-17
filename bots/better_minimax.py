@@ -1,3 +1,7 @@
+# This is just a lightly better implementation over minimax.py. It
+# checks to see where the enemy placed its first piece and places
+# a piece somewhere else.
+
 from botany_connectfour import game
 
 

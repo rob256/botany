@@ -1,4 +1,5 @@
-import copy
+# This is just random bot. Nothing smart.
+
 import random
 
 from botany_connectfour import game

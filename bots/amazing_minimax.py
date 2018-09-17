@@ -1,3 +1,8 @@
+# Another slight improvement over better_minimax.py. It checks to see if placing a
+# piece will give the enemy the opportunity to win on the next go and then avoids
+# that location.
+
+
 import random
 from botany_connectfour import game
 

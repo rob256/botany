@@ -1,3 +1,6 @@
+# This isn't really using a mimimax strategy. The boilerplate code is there but
+# we were hitting opcode limits. This name was to throw off the competition.
+
 import random
 
 from botany_connectfour import game
