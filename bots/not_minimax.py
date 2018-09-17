@@ -1,5 +1,84 @@
 import random
 from botany_connectfour import game
+from botany_core.tracer import get_opcode_count
+
+
+def check_winner(board, move, position, ignore_vertical=False):
+    token = board[move][position]
+
+    # Horizontal
+    total_count = 1
+    x = move
+    while True:
+        x -= 1
+        if x < 0 or board[x][position] != token:
+            break
+        total_count += 1
+    x = move
+    while True:
+        x += 1
+        if x > 6 or board[x][position] != token:
+            break
+        total_count += 1
+    if total_count >= 4:
+        return True
+
+    # Vertical
+    if not ignore_vertical:
+        total_count = 1
+        y = position
+        while True:
+            y -= 1
+            if y < 0 or board[move][y] != token:
+                break
+            total_count += 1
+        y = position
+        if total_count >= 4:
+            return True
+
+    # Diag 1
+    total_count = 1
+    x = move
+    y = position
+    while True:
+        x -= 1
+        y -= 1
+        if y < 0 or x < 0 or board[x][y] != token:
+            break
+        total_count += 1
+    x = move
+    y = position
+    while True:
+        y += 1
+        x += 1
+        if y > 5 or x > 6 or board[x][y] != token:
+            break
+        total_count += 1
+    if total_count >= 4:
+        return True
+
+    # Diag 2
+    total_count = 1
+    x = move
+    y = position
+    while True:
+        x += 1
+        y -= 1
+        if y < 0 or x > 6 or board[x][y] != token:
+            break
+        total_count += 1
+    x = move
+    y = position
+    while True:
+        x -= 1
+        y += 1
+        if y > 5 or x < 0 or board[x][y] != token:
+            break
+        total_count += 1
+    if total_count >= 4:
+        return True
+
+    return False
 
 
 def get_moves_played(board, max_move=10):
@@ -53,7 +132,8 @@ def get_next_move(board, token, state):
     available_moves = game.available_moves(board)
     preferred_locations = [3, 2, 4, 1, 5, 0, 6]
     priority_locations = get_columns_with_space(board, token, preferred_locations)
-    avoid_locations = []
+    losing_locations = set()
+
     if state is None:
         state = {'opening_trap': False}
 
@@ -63,13 +143,13 @@ def get_next_move(board, token, state):
 
     for move in available_moves:
         board[move][board_columns_used[move]] = token
-        if game.check_winner(board):
+        if check_winner(board, move, board_columns_used[move]):
             return move, state
         board[move][board_columns_used[move]] = '.'
 
     for move in available_moves:
         board[move][board_columns_used[move]] = other_token
-        if game.check_winner(board):
+        if check_winner(board, move, board_columns_used[move]):
             return move, state
         board[move][board_columns_used[move]] = '.'
 
@@ -79,15 +159,31 @@ def get_next_move(board, token, state):
         board[move][board_columns_used[move]] = token
         board[move][board_columns_used[move] + 1] = other_token
 
-        if game.check_winner(board):
-            avoid_locations.append(move)
+        if check_winner(board, move, board_columns_used[move] + 1):
+            losing_locations.add(move)
 
         board[move][board_columns_used[move]] = '.'
         board[move][board_columns_used[move] + 1] = '.'
 
+    skip_moves = set()
+
+    for move in available_moves:
+        if board_columns_used[move] > 4:
+            continue
+        board[move][board_columns_used[move]] = token
+        board[move][board_columns_used[move] + 1] = token
+
+        if check_winner(board, move, board_columns_used[move] + 1, ignore_vertical=True):
+            skip_moves.add(move)
+
+        board[move][board_columns_used[move]] = '.'
+        board[move][board_columns_used[move] + 1] = '.'
+
+    print(get_opcode_count())
+
     if moves_played == 1:
         # Don't go on top of the previous player
-        avoid_locations.append(find_enemy_location(board, other_token))
+        losing_locations.add(find_enemy_location(board, other_token))
 
     if moves_played == 2:
         if board[3][1] == other_token:
@@ -100,12 +196,22 @@ def get_next_move(board, token, state):
                 return 4, state
 
     for move in priority_locations:
-        if move not in available_moves or move in avoid_locations:
+        if move not in available_moves or move in losing_locations or move in skip_moves:
             continue
         return move, state
 
     for move in preferred_locations:
-        if move not in available_moves or move in avoid_locations:
+        if move not in available_moves or move in losing_locations or move in skip_moves:
+            continue
+        return move, state
+
+    for move in priority_locations:
+        if move not in available_moves or move in losing_locations:
+            continue
+        return move, state
+
+    for move in preferred_locations:
+        if move not in available_moves or move in losing_locations:
             continue
         return move, state
 
