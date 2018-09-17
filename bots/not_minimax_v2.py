@@ -3,28 +3,6 @@ from botany_connectfour import game
 from botany_core.tracer import get_opcode_count
 
 
-def test_make_board_from_string():
-    board_string = """.	.	.	.	.	.	.
-.	.	.	.	.	.	.
-.	X	.	.	X	.	.
-.	O	X	X	O	.	.
-X	O	O	O	X	.	.
-X	O	X	O	O	X	."""
-    return make_board_from_string(board_string)
-
-
-def make_board_from_string(board_string):
-    board = game.new_board()
-    for i, line in enumerate(board_string.split('\n')):
-        line = line.replace(' ', '')
-        line = line.replace('\t', '')
-        for j, char in enumerate(line):
-            if j == 7:
-                break
-            board[j][5 - i] = char
-    return board
-
-
 def check_winner(board, move, position, ignore_vertical=False):
     token = board[move][position]
 
@@ -122,22 +100,9 @@ def find_enemy_location(board, enemy_token):
             return i
 
 
-# def get_board_value(board, player):
-#     winner = game.check_winner(board)
-#     if winner is None:
-#         return 0
-#     elif winner == player:
-#         return float('inf')
-#     else:
-#         return float('-inf')
-
-
 def get_columns_with_space(board, token, preferred_locations):
     columns_with_space = []
     for column in preferred_locations:
-        if column == 3:
-            columns_with_space.append(column)
-            continue
         space_count = 0
         board_column = board[column]
         for row in board_column[::-1]:
@@ -162,71 +127,33 @@ def get_board_columns_used(board):
     return all_columns
 
 
-def board_walk(board, board_columns, move, token):
-    board[move][board_columns[move]] = token
-    board_columns[move] += 1
-
-
-def board_unwalk(board, board_columns, move):
-    board_columns[move] -= 1
-    board[move][board_columns[move]] = '.'
-
-
 def get_next_move(board, token, state):
-
-    test_board = test_make_board_from_string()
-
-    print(f'Before check_winner:{get_opcode_count()}')
-    game.check_winner(test_board)
-    print(f'After check_winner:{get_opcode_count()}')
-
     board_columns_used = get_board_columns_used(board)
-
-    print(f'Before available moves:{get_opcode_count()}')
-    all_available_moves = game.available_moves(board)
-    print(f'After available moves:{get_opcode_count()}')
-
+    available_moves = game.available_moves(board)
     preferred_locations = [3, 2, 4, 1, 5, 0, 6]
-
-    print(f'Before preferred locations:{get_opcode_count()}')
     priority_locations = get_columns_with_space(board, token, preferred_locations)
-    print(f'After preferred locations:{get_opcode_count()}')
-
     losing_locations = set()
+
     if state is None:
         state = {'opening_trap': False}
 
-    print(f'Before board walk: {get_opcode_count()}')
-    board[3][board_columns_used[3]] = token
-    board[3][board_columns_used[3]] = '.'
-    print(f'After board walk: {get_opcode_count()}')
-
     moves_played = get_moves_played(board)
-
-    # best_value = float('-inf')
-    # best_move = random.choice(available_moves)
 
     other_token = 'X' if token == 'O' else 'O'
 
-    for move in all_available_moves:
+    for move in available_moves:
         board[move][board_columns_used[move]] = token
         if check_winner(board, move, board_columns_used[move]):
             return move, state
         board[move][board_columns_used[move]] = '.'
 
-    print(get_opcode_count())
-
-    for move in all_available_moves:
+    for move in available_moves:
         board[move][board_columns_used[move]] = other_token
         if check_winner(board, move, board_columns_used[move]):
             return move, state
         board[move][board_columns_used[move]] = '.'
 
-    print(get_opcode_count())
-
-    available_moves = set(all_available_moves)
-
-    for move in all_available_moves:
+    for move in available_moves:
         if board_columns_used[move] > 4:
             continue
         board[move][board_columns_used[move]] = token
@@ -238,11 +165,9 @@ def get_next_move(board, token, state):
         board[move][board_columns_used[move]] = '.'
         board[move][board_columns_used[move] + 1] = '.'
 
-    print(get_opcode_count())
-
     skip_moves = set()
 
-    for move in all_available_moves:
+    for move in available_moves:
         if board_columns_used[move] > 4:
             continue
         board[move][board_columns_used[move]] = token
@@ -270,47 +195,24 @@ def get_next_move(board, token, state):
             if board[1][0] == '.' and board[4][0] == '.':
                 return 4, state
 
-    priority_locations = [x for x in priority_locations if x not in skip_moves]
-
     for move in priority_locations:
-        if move in losing_locations:
+        if move not in available_moves or move in losing_locations or move in skip_moves:
             continue
         return move, state
 
     for move in preferred_locations:
-        if move in losing_locations:
+        if move not in available_moves or move in losing_locations or move in skip_moves:
             continue
         return move, state
 
-    return random.choice(all_available_moves), state
+    for move in priority_locations:
+        if move not in available_moves or move in losing_locations:
+            continue
+        return move, state
 
-        # move_value = minimax(new_board, 0, False, token, other_token)
-        # if move_value > best_value:
-        #     best_move = move
+    for move in preferred_locations:
+        if move not in available_moves or move in losing_locations:
+            continue
+        return move, state
 
-    # return best_move
-
-
-# def minimax(board, depth, maxplayer, token, other_token):
-#     if depth == 0:
-#         return get_board_value(board, token)
-#     if maxplayer:
-#         value = float('-inf')
-#         for move in game.available_moves(board):
-#             new_board = copy_board(board)
-#             game.make_move(new_board, move, token)
-#             if game.check_winner(new_board):
-#                 return float('inf')
-#             value = max(value, minimax(new_board, depth - 1, False, token, other_token))
-#         return value
-#     else:
-#         value = float('inf')
-#         for move in game.available_moves(board):
-#             new_board = copy_board(board)
-#             game.make_move(new_board, move, other_token)
-#             if game.check_winner(new_board):
-#                 return float('-inf')
-#             value = min(value, minimax(new_board, depth - 1, True, token, other_token))
-#         return value
-
-
+    return random.choice(available_moves), state
