@@ -1,0 +1,8 @@
+{
+    "botany_game_module": "botany_connectfour.game",
+    "botany_game_package": "botany-connectfour",
+    "botany_num_rounds": 5,
+    "botany_opcode_limit": 60000,
+    "origin": "https://botany18.pyconuk.org",
+    "api_token": "Oi6gxSy7UsEa"
+}
