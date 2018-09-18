@@ -330,6 +330,8 @@ def check_edge_cases(board):
         return 5
     elif board_string == '......T......T......TO.....TXX....T......T......':
         return 4
+    elif board_string == '......T......TOOOXX.TXXOXXOT......T......T......':
+        return 1
     return None
 
 
