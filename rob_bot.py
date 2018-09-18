@@ -75,6 +75,16 @@ X X O X X O ."""
     return make_board_from_string(board_string)
 
 
+def make_test_board7():
+    board_string = """.	.	.	.	.	.	.
+.	.	.	.	.	.	.
+.	.	O	X	.	.	.
+.	.	O	O	.	.	.
+.	.	X	X	.	.	.
+.	.	O	X	.	X	."""
+    return make_board_from_string(board_string)
+
+
 def make_string_from_board(board):
     return 'T'.join(''.join(x) for x in board)
 
