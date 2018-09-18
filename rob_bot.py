@@ -35,6 +35,16 @@ def make_test_board2():
     return make_board_from_string(board_string)
 
 
+def make_test_board3():
+    board_string = """.	.	.	.	.	.	.
+.	.	.	.	.	.	.
+.	.	.	O	.	.	.
+.	.	.	O	.	.	.
+.	.	.	X	X	.	.
+.	.	O	X	X	X	O"""
+    return make_board_from_string(board_string)
+
+
 def make_string_from_board(board):
     return 'T'.join(''.join(x) for x in board)
 
