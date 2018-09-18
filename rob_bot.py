@@ -2,6 +2,8 @@ import random
 from botany_connectfour import game
 from botany_core.tracer import get_opcode_count
 
+import re
+
 
 def test_make_board_from_string():
     board_string = """.	.	.	.	.	.	.
@@ -11,6 +13,30 @@ def test_make_board_from_string():
 X	O	O	O	X	.	.
 X	O	X	O	O	X	."""
     return make_board_from_string(board_string)
+
+
+def make_test_board1():
+    board_string = """.	.	.	.	.	.	.
+.	.	.	.	.	.	.
+.	.	.	X	O	.	.
+.	.	.	O	O	.	.
+.	.	.	X	X	.	.
+.	.	.	X	O	.	."""
+    return make_board_from_string(board_string)
+
+
+def make_test_board2():
+    board_string = """.	.	.	.	.	.	.
+.	.	.	X	.	.	.
+.	.	.	X	O	.	.
+.	.	.	O	O	.	.
+.	.	.	X	X	.	.
+.	O	.	X	O	.	."""
+    return make_board_from_string(board_string)
+
+
+def make_string_from_board(board):
+    return 'T'.join(''.join(x) for x in board)
 
 
 def make_board_from_string(board_string):
@@ -23,6 +49,15 @@ def make_board_from_string(board_string):
                 break
             board[j][5 - i] = char
     return board
+
+
+def check_winner_regex(long_board_string, token, r=None):
+    if r is None:
+        if token == "X":
+            r = re.compile(r'XXXX|X.{6}X.{6}X.{6}X|X.{7}X.{7}X.{7}X|X.{8}X.{8}X.{8}X')
+        else:
+            r = re.compile(r'OOOO|O.{6}O.{6}O.{6}O|O.{7}O.{7}O.{7}O|O.{8}O.{8}O.{8}O')
+    return r.search(long_board_string)
 
 
 def check_winner(board, move, position, ignore_vertical=False):
@@ -172,7 +207,7 @@ def board_unwalk(board, board_columns, move):
     board[move][board_columns[move]] = '.'
 
 
-def get_next_move(board, token, state):
+def get_next_move(board, token):
 
     test_board = test_make_board_from_string()
 
@@ -193,13 +228,36 @@ def get_next_move(board, token, state):
     print(f'After preferred locations:{get_opcode_count()}')
 
     losing_locations = set()
-    if state is None:
-        state = {'opening_trap': False}
+    # if state is None:
+    #     state = {'opening_trap': False}
 
     print(f'Before board walk: {get_opcode_count()}')
     board[3][board_columns_used[3]] = token
     board[3][board_columns_used[3]] = '.'
     print(f'After board walk: {get_opcode_count()}')
+
+
+    new_board = game.new_board()
+    new_board[0][0] = 'X'
+    new_board[1][1] = 'X'
+    new_board[2][2] = 'X'
+    new_board[3][3] = 'X'
+
+    print(f'Before game.check_winner:{get_opcode_count()}')
+    game.check_winner(new_board)
+    print(f'After game.check_winner:{get_opcode_count()}')
+
+    print(f'Before check_winner:{get_opcode_count()}')
+    check_winner(board, 3, 3)
+    print(f'After check_winner:{get_opcode_count()}')
+
+    rO = re.compile(r'OOOO|O.{6}O.{6}O.{6}O|O.{7}O.{7}O.{7}O|O.{8}O.{8}O.{8}O')
+    rX = re.compile(r'XXXX|X.{6}X.{6}X.{6}X|X.{7}X.{7}X.{7}X|X.{8}X.{8}X.{8}X')
+    board_string = make_string_from_board(board)
+    print(f'Before check_winner_regex:{get_opcode_count()}')
+    board_string = board_string[:2 * 7 + 2] + 'X' + board_string[2 * 7 + 2:]
+    check_winner_regex(board_string, 'X', r=rX)
+    print(f'After check_winner_regex:{get_opcode_count()}')
 
     moves_played = get_moves_played(board)
 
@@ -211,7 +269,7 @@ def get_next_move(board, token, state):
     for move in all_available_moves:
         board[move][board_columns_used[move]] = token
         if check_winner(board, move, board_columns_used[move]):
-            return move, state
+            return move
         board[move][board_columns_used[move]] = '.'
 
     print(get_opcode_count())
@@ -219,7 +277,7 @@ def get_next_move(board, token, state):
     for move in all_available_moves:
         board[move][board_columns_used[move]] = other_token
         if check_winner(board, move, board_columns_used[move]):
-            return move, state
+            return move
         board[move][board_columns_used[move]] = '.'
 
     print(get_opcode_count())
@@ -254,6 +312,12 @@ def get_next_move(board, token, state):
         board[move][board_columns_used[move]] = '.'
         board[move][board_columns_used[move] + 1] = '.'
 
+    # for move in all_available_moves:
+    #     board[move][board_columns_used[move]] = token
+    #     if move_makes_opportunity(board, move, board_columns_used[move], token):
+    #         return move
+
+
     print(get_opcode_count())
 
     if moves_played == 1:
@@ -262,27 +326,25 @@ def get_next_move(board, token, state):
 
     if moves_played == 2:
         if board[3][1] == other_token:
-            state['opening_trap'] = True
-            return 2, state
+            return 2
 
     if moves_played == 4:
-        if state['opening_trap']:
-            if board[1][0] == '.' and board[4][0] == '.':
-                return 4, state
+        if board[3][1] == other_token and board[1][0] == '.' and board[4][0] == '.':
+            return 4
 
     priority_locations = [x for x in priority_locations if x not in skip_moves]
 
     for move in priority_locations:
         if move in losing_locations:
             continue
-        return move, state
+        return move
 
     for move in preferred_locations:
         if move in losing_locations:
             continue
-        return move, state
+        return move
 
-    return random.choice(all_available_moves), state
+    return random.choice(all_available_moves)
 
         # move_value = minimax(new_board, 0, False, token, other_token)
         # if move_value > best_value:

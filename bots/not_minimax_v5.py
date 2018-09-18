@@ -130,25 +130,6 @@ def get_board_columns_used(board):
     return all_columns
 
 
-def can_make_4_horizontal(board, move_x, move_y, token):
-    total = 1
-    x = move_x
-    while True:
-        x += 1
-        if x < 7 and (board[x][move_y] == token or board[x][move_y] == '.'):
-            total += 1
-        else:
-            break
-    x = move_x
-    while True:
-        x -= 1
-        if x >= 0 and (board[x][move_y] == token or board[x][move_y] == '.'):
-            total += 1
-        else:
-            break
-    return total >= 4
-
-
 def get_next_move(board, token):
     board_columns_used = get_board_columns_used(board)
     available_moves = game.available_moves(board)
@@ -157,7 +138,6 @@ def get_next_move(board, token):
     priority_locations = get_columns_with_space(board, token, preferred_locations)
     opcode_limit = get_opcode_limit()
     losing_locations = set()
-    skip_moves = set()
 
     # if state is None:
     #     state = {'opening_trap': False}
@@ -208,6 +188,8 @@ def get_next_move(board, token):
         if board[3][1] == other_token and board[1][0] == '.' and board[4][0] == '.':
             return 4
 
+    skip_moves = set()
+
     for move in available_moves:
         if board_columns_used[move] > 4:
             continue
@@ -224,8 +206,6 @@ def get_next_move(board, token):
 
     for move in preferred_locations:
         if move in skip_moves or move in losing_locations or board_columns_used[move] == 0 or board_columns_used[move] > 3:
-            continue
-        if not can_make_4_horizontal(board, move, board_columns_used[move], token):
             continue
         if move > 0:
             if board[move - 1][board_columns_used[move]] == token:
