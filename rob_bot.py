@@ -115,6 +115,16 @@ O	.	O	X	O	X	X"""
     return make_board_from_string(board_string)
 
 
+def make_test_board11():
+    board_string = """.	.	.	O	.	.	.
+.	.	O	X	.	.	.
+O	.	X	X	.	.	.
+X	.	X	O	.	.	.
+O	.	X	O	.	X	.
+O	.	O	X	O	X	X"""
+    return make_board_from_string(board_string)
+
+
 def make_string_from_board(board):
     return 'T'.join(''.join(x) for x in board)
 
