@@ -255,10 +255,9 @@ def get_next_move(board, token):
     for move in preferred_locations:
         move_score = {}
         if move in skip_moves or move in losing_locations or board_columns_used[move] == 0 or board_columns_used[move]:
-            continue
-        friendly_neighbours = get_friendly_neighbours(board, move, board_columns_used[move], token)
-        if friendly_neighbours > 1:
-            move_score[move] = friendly_neighbours
+            friendly_neighbours = get_friendly_neighbours(board, move, board_columns_used[move], token)
+            if friendly_neighbours > 1:
+                move_score[move] = friendly_neighbours
         if move_score:
             sorted_score = sorted(move_score.items(), key=itemgetter(1))
             return sorted_score[0][0]
